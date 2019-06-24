@@ -8,15 +8,15 @@ async function execute () {
    // XOR dataset
    var trainingSet = [
        { input: [0,0], output: [0] },
-       { input: [0,1], output: [1] },
-       { input: [1,0], output: [1] },
-       { input: [1,1], output: [0] }
+//       { input: [0,1], output: [1] },
+//       { input: [1,0], output: [1] },
+//       { input: [1,1], output: [0] }
    ];
 
    await network.evolve(trainingSet, {
        mutation: methods.mutation.FFW,
        equal: true,
-       error: 0.0001,
+       error: 1000,
        elitism: 5,
        mutation_rate: 0.5,
        cost: () => {

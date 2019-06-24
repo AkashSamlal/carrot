@@ -19,10 +19,23 @@ var path = require('path');
 * @param dataSet
 * @param cost
 */
-function TestWorker (dataSet, cost) {
-  this.worker = cp.fork(path.join(__dirname, '/worker'));
+let i = 1;
+// methods is being passed as a parameter because for some reason this:
+// var { methods } = require('../../../carrot');
+// was returning methods === undefined
+function TestWorker (dataset, cost, methods, multi) {
+  // if cost is a standard function, make worker more efficient by only referencing the function
+  // otherwise, the entire function is serialzed and deserialized
+  const cost_is_standard_name = (cost.name in methods.cost);
 
-  this.worker.send({ set: dataSet, cost: cost.name });
+  this.worker = cp.fork(path.join(__dirname, '/worker'), [], {
+    env: {
+      dataset: JSON.stringify(dataset),
+      cost: cost_is_standard_name ? cost.name : cost,
+      cost_is_standard_name,
+    }
+  });
+  this.worker.send({dataset: dataset});
 }
 
 TestWorker.prototype = {
@@ -51,7 +64,7 @@ TestWorker.prototype = {
         _that.removeListener('message', callback);
         resolve(e);
       });
-
+      // console.log('sending data to worker', data);
       this.worker.send(data);
     });
   },

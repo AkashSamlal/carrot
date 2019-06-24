@@ -110,8 +110,6 @@ var multi = {
   * @returns {number} - Error
   */
   testSerializedSet: function (set, cost, A, S, data, F) {
-
-    
     // Calculate how much samples are in the set
     var error = 0;
     for (var i = 0; i < set.length; i += 2) {

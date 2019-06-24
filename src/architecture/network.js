@@ -1323,9 +1323,11 @@ function Network(input_size, output_size) {
     // Create workers, send datasets
     const workers = [];
     if (typeof window === `undefined`) {
-      for (var i = 0; i < options.threads; i++) workers.push(new multi.workers.node.TestWorker(serialized_dataset, options.cost));
+      for (var i = 0; i < options.threads; i++)
+        workers.push(new multi.workers.node.TestWorker(serialized_dataset, options.cost, methods, multi));
     } else {
-      for (var i = 0; i < options.threads; i++) workers.push(new multi.workers.browser.TestWorker(serialized_dataset, options.cost));
+      for (var i = 0; i < options.threads; i++)
+        workers.push(new multi.workers.browser.TestWorker(serialized_dataset, options.cost, methods, multi));
     }
 
     options.fitness = function (dataset, population) {
