@@ -1337,10 +1337,12 @@ function Network(input_size, output_size) {
     // Serialize the dataset
     const serialized_dataset = multi.serializeDataSet(dataset);
 
+    console.log('@network:1340');
+
     // Create workers, send datasets
     const workers = [];
     if (typeof window === `undefined`) {
-      for (var i = 0; i < options.threads; i++) workers.push(new multi.workers.node.TestWorker(serialized_dataset, options.cost));
+      for (var i = 0; i < options.threads; i++) workers.push(new multi.workers.node.TestWorker(serialized_dataset, options.cost, {worker_number: i}));
     } else {
       for (var i = 0; i < options.threads; i++) workers.push(new multi.workers.browser.TestWorker(serialized_dataset, options.cost));
     }
@@ -1376,6 +1378,7 @@ function Network(input_size, output_size) {
 
     options.fitness_population = true;
 
+    console.log('@network:1382');
 
     // Intialise the NEAT instance
     options.network = this;
@@ -1387,8 +1390,13 @@ function Network(input_size, output_size) {
     let best_fitness = -Infinity;
     let best_genome;
 
+    console.log('@network:1393');
+
     while (error < -target_error && (options.iterations === 0 || neat.generation < options.iterations)) {
+
+      console.log('@network:1396');
       const fittest = await neat.evolve();
+      console.log('@network:1399');
       const fitness = fittest.score;
       error = fitness + (fittest.nodes.length - fittest.input - fittest.output + fittest.connections.length + fittest.gates.length) * options.growth;
 
@@ -1404,7 +1412,10 @@ function Network(input_size, output_size) {
       if (options.schedule && neat.generation % options.schedule.iterations === 0) {
         options.schedule.function({ fitness: fitness, error: -error, iteration: neat.generation });
       }
+
+      console.log('@network:1343');
     }
+    console.log('@network:1415');
 
     for (let i = 0; i < workers.length; i++) workers[i].terminate();
 
@@ -2072,13 +2083,17 @@ const Neat = function(dataset, {
 
     evolve_set = evolve_set || self.dataset;
 
+    console.log('@network:2086');
     // Check population for evaluation
     if (typeof self.population[self.population.length - 1].score === `undefined`)
       await self.evaluate(evolve_set);
       // await self.evaluate(_.isArray(evolve_set) ? evolve_set : _.isArray(self.dataset) ? self.dataset : parameter.is.required("dataset"));
+
+    console.log('@network:2092');
     // Check & adjust genomes as needed
     if (pickGenome) self.population = self.filterGenome(self.population, self.template, pickGenome, adjustGenome)
 
+    console.log('@network:2096');
     // Sort in order of fitness (fittest first)
     self.sort();
 
@@ -2086,22 +2101,28 @@ const Neat = function(dataset, {
     const elitists = [];
     for (let i = 0; i < self.elitism; i++) elitists.push(self.population[i]);
 
+    console.log('@network:2104');
     // Provenance
     const new_population = Array(self.provenance).fill(Network.fromJSON(self.template.toJSON()))
 
+    console.log('@network:2108');
     // Breed the next individuals
     for (let i = 0; i < self.population_size - self.elitism - self.provenance; i++)
       new_population.push(self.getOffspring());
 
+    console.log('@network:2113');
     // Replace the old population with the new population
     self.population = new_population;
 
+    console.log('@network:2117');
     // Mutate the new population
     self.mutate();
 
+    console.log('@network:2121');
     // Add the elitists
     self.population.push(...elitists);
 
+    console.log('@network:2125');
     // evaluate the population
     await self.evaluate(evolve_set);
     // await self.evaluate(_.isArray(evolve_set) ? evolve_set : _.isArray(self.dataset) ? self.dataset : parameter.is.required("dataset"));
@@ -2115,6 +2136,7 @@ const Neat = function(dataset, {
     const fittest = Network.fromJSON(self.population[0].toJSON());
     fittest.score = self.population[0].score;
 
+    console.log('@network:2139');
     // Reset the scores
     for (let i = 0; i < self.population.length; i++) self.population[i].score = undefined;
 

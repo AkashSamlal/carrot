@@ -22,7 +22,11 @@ const standard_cost_functions = require('../../../methods/cost');
 * @param {Array} serialized_dataset a dataset of the form Array<{input:number[],output:number[]}> serialized by multi.serializeDataSet. Read network.prototype.evolve dataset parameter.
 * @param {Function} cost
 */
-function TestWorker (serialized_dataset, cost_function) {
+function TestWorker (serialized_dataset, cost_function, {worker_number = 1} = {}) {
+  // debugger;
+  // for debugger
+  // process.execArgv.push('--inspect=' + (9230 + worker_number));
+
   this.worker = cp.fork(path.join(__dirname, '/worker'));
 
   const cost_is_standard = cost_function.name in standard_cost_functions;
