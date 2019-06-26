@@ -6,6 +6,9 @@ const Connection = require("./connection");
 const config = require("../config");
 const Node = require("./node");
 
+// to debug
+const console = require("../util/debugging-tools");
+
 // Easier variable naming
 const mutation = methods.mutation;
 
@@ -1708,7 +1711,12 @@ Network.crossOver = function(network1, network2, equal) {
   }
 
   // Initialise offspring
+
+  console.log('@network:1715');
+  // This fn call is slow. With a network (in: 10, out: 3072, hid: 0) it takes about half a second
+  // on average. TODO: Improve
   const offspring = new Network(network1.input_size, network1.output_size);
+  console.log('@network:1717');
   offspring.connections = [];
   offspring.nodes = [];
 
@@ -1731,6 +1739,7 @@ Network.crossOver = function(network1, network2, equal) {
   // Rename some variables for easier reading
   const output_size = network1.output_size;
 
+  console.log('@network:1740');
   // Set indexes so we don't need indexOf
   let i;
   for (i = 0; i < network1.nodes.length; i++) {
@@ -1773,6 +1782,7 @@ Network.crossOver = function(network1, network2, equal) {
   const n1connections = {};
   const n2connections = {};
 
+  console.log('@network:1783');
   // Normal connections
   for (i = 0; i < network1.connections.length; i++) {
     const connection = network1.connections[i];
@@ -1821,6 +1831,7 @@ Network.crossOver = function(network1, network2, equal) {
     n2connections[Connection.innovationID(data.from, data.to)] = data;
   }
 
+  console.log('@network:1834');
   // Split common conn genes from disjoint or excess conn genes
   var connections = [];
   var keys1 = Object.keys(n1connections);
@@ -1838,6 +1849,7 @@ Network.crossOver = function(network1, network2, equal) {
     }
   }
 
+  console.log('@network:1852');
   // Excess/disjoint gene
   if (score2 >= score1 || equal) {
     for (i = 0; i < keys2.length; i++) {
@@ -1846,8 +1858,11 @@ Network.crossOver = function(network1, network2, equal) {
       }
     }
   }
-
+  console.log('@network:1861');
   // Add common conn genes uniformly
+  // This for takes on average 1.5 seconds with a network (in: 10, out: 3072, hid: 0).
+  // TODO: Improve!
+  // debugger;
   for (i = 0; i < connections.length; i++) {
     let connection_data = connections[i];
     if (connection_data.to < size && connection_data.from < size) {
@@ -1862,6 +1877,8 @@ Network.crossOver = function(network1, network2, equal) {
       }
     }
   }
+  console.log('@network:1881');
+  process.exit();
 
   return offspring;
 };
@@ -2083,17 +2100,17 @@ const Neat = function(dataset, {
 
     evolve_set = evolve_set || self.dataset;
 
-    console.log('@network:2086');
+    // console.log('@network:2086');
     // Check population for evaluation
     if (typeof self.population[self.population.length - 1].score === `undefined`)
       await self.evaluate(evolve_set);
       // await self.evaluate(_.isArray(evolve_set) ? evolve_set : _.isArray(self.dataset) ? self.dataset : parameter.is.required("dataset"));
 
-    console.log('@network:2092');
+    // console.log('@network:2092');
     // Check & adjust genomes as needed
     if (pickGenome) self.population = self.filterGenome(self.population, self.template, pickGenome, adjustGenome)
 
-    console.log('@network:2096');
+    // console.log('@network:2096');
     // Sort in order of fitness (fittest first)
     self.sort();
 
@@ -2101,20 +2118,23 @@ const Neat = function(dataset, {
     const elitists = [];
     for (let i = 0; i < self.elitism; i++) elitists.push(self.population[i]);
 
-    console.log('@network:2104');
+    // console.log('@network:2104');
     // Provenance
     const new_population = Array(self.provenance).fill(Network.fromJSON(self.template.toJSON()))
 
-    console.log('@network:2108');
+    // console.log('@network:2108');
     // Breed the next individuals
-    for (let i = 0; i < self.population_size - self.elitism - self.provenance; i++)
+    for (let i = 0; i < self.population_size - self.elitism - self.provenance; i++) {
+      // console.log('@network:2117');
       new_population.push(self.getOffspring());
+      // console.log('@network:2119');
+    }
 
-    console.log('@network:2113');
+    // console.log('@network:2118');
     // Replace the old population with the new population
     self.population = new_population;
 
-    console.log('@network:2117');
+    // console.log('@network:2122');
     // Mutate the new population
     self.mutate();
 
@@ -2218,10 +2238,13 @@ const Neat = function(dataset, {
    * @returns {Network} Child network
    */
   self.getOffspring = function () {
-    var parent1 = self.getParent();
-    var parent2 = self.getParent();
+    const parent1 = self.getParent(); // very fast
+    const parent2 = self.getParent(); // very fast
+    console.log('@network:2233');
+    const offspring = Network.crossOver(parent1, parent2, self.equal);
+    console.log('@network:2235');
 
-    return Network.crossOver(parent1, parent2, self.equal);
+    return offspring;
   };
 
   /**
