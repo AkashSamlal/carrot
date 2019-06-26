@@ -12,13 +12,12 @@ const timer_counter = {}
 
 const realConsoleLog = console.log;
 // much more useful console log
-console.log = function (msg, { timer_flag } = {}) {
+// timer has either 'start' or 'end'
+console.log = function (msg, { timer_flag, timer } = {}) {
   time_now = Date.now();
 
   let string_timer = '';
   if (timer_flag) {
-
-    timer_data = timer_counter[timer_flag];
     if (!(timer_flag in timer_counter)) {
       // never used the flag before
       // add flag to map
@@ -28,11 +27,24 @@ console.log = function (msg, { timer_flag } = {}) {
       timer_data.counter_of_apparitions = 0;
       timer_data.time_of_last_appearance = time_now;
     } else {
-      timer_data.average_time_between = (
-        timer_data.average_time_between * timer_data.counter_of_apparitions +
-        (time_now - timer_data.time_of_last_appearance)) / (++timer_data.counter_of_apparitions);
-      timer_data.time_of_last_appearance = time_now;
-      string_timer = string_timer + timer_data.average_time_between;
+      timer_data = timer_counter[timer_flag];
+      if (timer === 'start') {
+        if (timer_data.time_of_last_appearance !== 0) {
+          throw new Error('Sent a start signal without sending an end signal');
+        }
+        timer_data.time_of_last_appearance = time_now;
+      } else if (timer !== 'end') throw new Error('timer signal not recognized');
+      else {
+        if (timer_data.time_of_last_appearance === 0) {
+          throw new Error('Sent an end signal without sending a start signal');
+        }
+        // timer is end
+        timer_data.average_time_between = (
+          timer_data.average_time_between * timer_data.counter_of_apparitions +
+          (time_now - timer_data.time_of_last_appearance)) / (++timer_data.counter_of_apparitions);
+        string_timer = string_timer + timer_data.average_time_between;
+        timer_data.time_of_last_appearance = 0;
+      }
     }
   }
 
